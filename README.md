@@ -21,7 +21,7 @@ A fully functional weather web application built with Vue 3 and Vite.
 
 - Vue 3
 - Vite
-- OpenWeatherMap API (current weather endpoint)
+- WeatherAPI (current weather endpoint)
 
 ## Setup and Run
 
@@ -40,7 +40,7 @@ copy .env.example .env
 3. Open `.env` and add your real API key:
 
 ```env
-VITE_OPENWEATHER_API_KEY=your_real_api_key
+VITE_WEATHERAPI_KEY=your_real_api_key
 ```
 
 4. Start the app:
@@ -66,4 +66,4 @@ npm run preview
 ## Notes
 
 - Do not commit your real `.env` file.
-- Get a free API key from [OpenWeatherMap](https://openweathermap.org/api).
+- Get a free API key from [WeatherAPI](https://www.weatherapi.com/).

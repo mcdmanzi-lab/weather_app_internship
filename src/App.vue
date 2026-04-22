@@ -1,8 +1,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 
-const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
-const WEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5/weather'
+const API_KEY = import.meta.env.VITE_WEATHERAPI_KEY
+const WEATHER_BASE_URL = 'https://api.weatherapi.com/v1/current.json'
 const LAST_CITY_KEY = 'weather_last_city'
 
 const city = ref('')
@@ -23,9 +23,9 @@ async function loadWeatherByCity(targetCity) {
 
   try {
     const params = new URLSearchParams({
+      key: API_KEY,
       q: trimmedCity,
-      appid: API_KEY,
-      units: 'metric'
+      aqi: 'no'
     })
     const response = await fetch(`${WEATHER_BASE_URL}?${params.toString()}`)
     const data = await response.json()
@@ -36,8 +36,8 @@ async function loadWeatherByCity(targetCity) {
 
     weather.value = data
     sourceLabel.value = 'Search result'
-    city.value = data.name
-    localStorage.setItem(LAST_CITY_KEY, data.name)
+    city.value = data.location?.name || trimmedCity
+    localStorage.setItem(LAST_CITY_KEY, city.value)
   } catch (error) {
     weather.value = null
     errorMessage.value = `Could not find weather for "${trimmedCity}".`
@@ -55,10 +55,9 @@ async function loadWeatherByCoords(latitude, longitude) {
 
   try {
     const params = new URLSearchParams({
-      lat: String(latitude),
-      lon: String(longitude),
-      appid: API_KEY,
-      units: 'metric'
+      key: API_KEY,
+      q: `${latitude},${longitude}`,
+      aqi: 'no'
     })
     const response = await fetch(`${WEATHER_BASE_URL}?${params.toString()}`)
     const data = await response.json()
@@ -69,8 +68,8 @@ async function loadWeatherByCoords(latitude, longitude) {
 
     weather.value = data
     sourceLabel.value = 'Current location'
-    city.value = data.name
-    localStorage.setItem(LAST_CITY_KEY, data.name)
+    city.value = data.location?.name || city.value
+    localStorage.setItem(LAST_CITY_KEY, city.value)
   } catch (error) {
     weather.value = null
     errorMessage.value = 'Unable to load weather for your current location.'
@@ -125,7 +124,7 @@ onMounted(() => {
 
       <p v-if="!hasApiKey" class="error">
         Missing API key. Create a <code>.env</code> file with
-        <code>VITE_OPENWEATHER_API_KEY=your_key</code>.
+        <code>VITE_WEATHERAPI_KEY=your_key</code>.
       </p>
 
       <form class="search-row" @submit.prevent="handleSearch">
@@ -148,29 +147,29 @@ onMounted(() => {
 
       <article v-if="weather" class="weather-panel">
         <div class="weather-header">
-          <h2>{{ weather.name }}, {{ weather.sys?.country }}</h2>
+          <h2>{{ weather.location?.name }}, {{ weather.location?.country }}</h2>
           <span class="source">{{ sourceLabel }}</span>
         </div>
 
         <div class="summary">
           <img
-            v-if="weather.weather?.[0]?.icon"
-            :src="`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`"
-            :alt="weather.weather?.[0]?.description || 'Weather icon'"
+            v-if="weather.current?.condition?.icon"
+            :src="`https:${weather.current.condition.icon}`"
+            :alt="weather.current?.condition?.text || 'Weather icon'"
             width="96"
             height="96"
           />
           <div>
-            <p class="temp">{{ Math.round(weather.main?.temp) }}°C</p>
-            <p class="condition">{{ weather.weather?.[0]?.description }}</p>
+            <p class="temp">{{ Math.round(weather.current?.temp_c) }}°C</p>
+            <p class="condition">{{ weather.current?.condition?.text }}</p>
           </div>
         </div>
 
         <div class="metrics">
-          <p><strong>Feels like:</strong> {{ Math.round(weather.main?.feels_like) }}°C</p>
-          <p><strong>Humidity:</strong> {{ weather.main?.humidity }}%</p>
-          <p><strong>Wind speed:</strong> {{ weather.wind?.speed }} m/s</p>
-          <p><strong>Pressure:</strong> {{ weather.main?.pressure }} hPa</p>
+          <p><strong>Feels like:</strong> {{ Math.round(weather.current?.feelslike_c) }}°C</p>
+          <p><strong>Humidity:</strong> {{ weather.current?.humidity }}%</p>
+          <p><strong>Wind speed:</strong> {{ weather.current?.wind_kph }} km/h</p>
+          <p><strong>Pressure:</strong> {{ weather.current?.pressure_mb }} hPa</p>
         </div>
       </article>
     </section>
